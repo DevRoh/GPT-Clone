@@ -1,5 +1,6 @@
 import expresss from "express";
 import { login,signup,profile,logout } from "../controllers/userController.js";
+import { isAuth } from "../middleware/isAuth.js";
 
 const userRouter = expresss.Router();
 
@@ -8,6 +9,6 @@ const userRouter = expresss.Router();
 userRouter.post("/signup", signup);
 userRouter.post("/login", login);
 userRouter.get("/logout", logout);
-userRouter.get("/profile", profile);
+userRouter.get("/profile", isAuth, profile);
 
 export default userRouter;
