@@ -1,5 +1,6 @@
 import express from "express";
 import User from "../model/userSchema.js";
+import { loginSchema, signupSchema } from "../validators/userValidator.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -23,13 +24,26 @@ const cookieOptions = {
 
 export const signup = async (req, res) => {
   try {
-    const { name, age, email, password } = req.body;
+    const result = signupSchema.safeParse(req.body);
+    //   result =   {
+    //   success: true,
+    //   data: {
+    //     username: "rohit_paul",
+    //     email: "rohit@example.com",
+    //     age: 22 // (coerced from a string if you used z.coerce.number())
+    //   }
+    // }
 
-    if (!email || !password || !name) {
+    if (!result.success) {
+      console.log("Error in zod validation: ", result.error);
       return res
         .status(400)
-        .json({ success: false, message: "Some fields are missing" });
+        .json({ success: false, message: "Invaid credentials" });
     }
+
+    // const userData = result.data;
+    const { name, age, email, password } = result.data;
+
     try {
       const user = await User.findOne({ email });
       if (user) {
@@ -69,13 +83,16 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    console.log("Missing email or password");
+  const result = loginSchema.safeParse(req.body);
+
+  if (!result.success) {
+    console.log("Error in zod validation: ", result.error);
     return res
       .status(400)
-      .json({ success: false, messsage: "Some fields are missisng" });
+      .json({ success: false, message: "Invaid credentials" });
   }
+
+  const {email,password} = result.data;
 
   try {
     const user = await User.findOne({ email });
@@ -94,13 +111,16 @@ export const login = async (req, res) => {
 
     const token = createToken(user._id, email);
     res.cookie("token", token);
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Logged in successfully",
-        profile: { user: user.name, age: user.age, email: user.email, usage:user.usage },
-      });
+    res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      profile: {
+        user: user.name,
+        age: user.age,
+        email: user.email,
+        usage: user.usage,
+      },
+    });
   } catch (error) {
     console.log("Error in login controller", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -108,8 +128,10 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-    res.clearCookie("token",{httpOnly:true,secure:false}); // here we give cookie options without maxAge
-    res.status(200).json({success:true,message:"User logged out successfully"});
+  res.clearCookie("token", { httpOnly: true, secure: false }); // here we give cookie options without maxAge
+  res
+    .status(200)
+    .json({ success: true, message: "User logged out successfully" });
 };
 
 export const profile = async (req, res) => {
@@ -117,7 +139,9 @@ export const profile = async (req, res) => {
     const user = req.user;
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     return res.status(200).json({
@@ -132,6 +156,8 @@ export const profile = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in profile controller", error.message);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };

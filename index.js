@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import userRouter from "./routes/userRouter.js";
 import messageRouter from "./routes/messageRouter.js";
+import chatRouter from "./routes/chatRouter.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -15,6 +16,7 @@ app.use(cookieParser());
 
 app.use("/user", userRouter);
 app.use("/msg", messageRouter);
+app.use('/chat',chatRouter);
 
 const startServer = async () => {
   try {
