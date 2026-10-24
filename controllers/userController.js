@@ -4,6 +4,8 @@ import { loginSchema, signupSchema } from "../validators/userValidator.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import Chat from "../model/chatSchema.js";
+import Message from "../model/messageSchema.js";
 
 const createToken = (id, email) => {
   if (!process.env.JWT_SECRET) {
@@ -92,7 +94,7 @@ export const login = async (req, res) => {
       .json({ success: false, message: "Invaid credentials" });
   }
 
-  const {email,password} = result.data;
+  const { email, password } = result.data;
 
   try {
     const user = await User.findOne({ email });
@@ -159,5 +161,39 @@ export const profile = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const deleteProfile = async (req, res) => {
+  try {
+    // find all the chatId which belongs to user
+    const userId = req.user._id;
+
+    const chats = await Chat.find({ userId }).select("_id");
+
+    const chatIds = chats.map((chat) => chat._id);
+    //delete all the messages which belongs to chatId
+    await Message.deleteMany({
+      chatId: { $in: chatIds },
+    });
+
+    //Delete all the chatId which belongs to this user
+
+    await Chat.deleteMany({ userId });
+
+    //Delete user profile: by its id
+
+    await User.deleteOne({ _id: userId });
+
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: false,
+    });
+    res
+      .status(200)
+      .json({ success: true, message: "Account deleted successfully" });
+  } catch (error) {
+    console.log("Error in user controller", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
