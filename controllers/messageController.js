@@ -59,10 +59,13 @@ export const sendMessage = async (req, res) => {
 
     //4. save user message
     const userMessage = await Message.create({
+        userId: req.user._id,
         chatId:chat._id,
         role:"user",
         content:content.trim()
     })
+
+    res.status(200).json({success:true,message:"Message sent successfully"});
 
   } catch (error) {
     console.log("Error in messageController", error);

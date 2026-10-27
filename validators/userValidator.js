@@ -1,4 +1,4 @@
-import { email, string, z } from "zod";
+import * as z from "zod";
 
 // name, age, email, password
 
@@ -26,7 +26,7 @@ export const signupSchema = z.object({
     .regex(/[a-z]/, "Your password should have atlease 1 small case")
     .regex(/[0-9]/, "Your password should have 1 number")
     .regex(
-      [/[]~!@#%&()_/],
+      /[\[\]\/~!@#%&()_]/,
       "Your password should have atleast 1 special character",
     ),
 });
@@ -43,8 +43,7 @@ export const loginSchema = z.object({
     .regex(/[A-Z]/, "Your password should have atleast 1 upper case")
     .regex(/[a-z]/, "Your password should have atlease 1 small case")
     .regex(/[0-9]/, "Your password should have 1 number")
-    .regex(
-      [/[]~!@#%&()_/],
+    .regex(/[\[\]\/~!@#%&()_]/,
       "Your password should have atleast 1 special character",
     ),
 });
